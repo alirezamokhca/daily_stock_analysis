@@ -63,9 +63,10 @@ def main() -> int:
         text = fh.read()
     print(f"paper text: {len(text)} chars from {TEXT_FILE}", flush=True)
 
-    # gemini-2.5-flash is retired for this key; gemini-3.8-flash is the
-    # replacement the API itself names.
-    agent = PaperDemoAgent(provider="gemini", model="gemini-3.8-flash")
+    # gemini-3.8-flash returned a functionCall the tool could not parse
+    # (run 43663807006, Phase 1). Try gemini-2.5-pro instead: same free key,
+    # no new account or payment; slower, but it may answer in plain text.
+    agent = PaperDemoAgent(provider="gemini", model="gemini-2.5-pro")
     result = agent.run(
         source=text,
         demo_form="app",
