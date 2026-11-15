@@ -1,0 +1,38 @@
+name: PaperDemoAgent — Tabiei & Zhang (2016)
+
+# Manual trigger only. Run it from the repo's Actions tab.
+# Quota note: the free Gemini tier allows 20 generate requests/day per
+# model, shared with the Daily Stock Analysis runs on the same key.
+# Run this on a day the daily runs will not compete (e.g. Saturday).
+on:
+  workflow_dispatch:
+
+jobs:
+  build-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PaperDemoAgent
+        run: pip install paper-demo-agent
+
+      - name: Build the demo
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 run_demo_ci.py
+
+      - name: List the demo output
+        run: ls -R demos || true
+
+      - name: Upload demo as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-demo-tabiei-zhang-2016
+          path: demos/
+          if-no-files-found: warn
