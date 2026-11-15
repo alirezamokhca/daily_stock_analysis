@@ -63,10 +63,11 @@ def main() -> int:
         text = fh.read()
     print(f"paper text: {len(text)} chars from {TEXT_FILE}", flush=True)
 
-    # gemini-3.8-flash returned a functionCall the tool could not parse
-    # (run 43663807006, Phase 1). Try gemini-2.5-pro instead: same free key,
-    # no new account or payment; slower, but it may answer in plain text.
-    agent = PaperDemoAgent(provider="gemini", model="gemini-2.5-pro")
+    # gemini-2.5-pro is retired for this key (404, run 43666673092);
+    # the API itself names gemini-3.1-pro-preview as the replacement.
+    # Same free key, no new account or payment; slower, but it may
+    # answer in plain text where gemini-3.8-flash sent a functionCall.
+    agent = PaperDemoAgent(provider="gemini", model="gemini-3.1-pro-preview")
     result = agent.run(
         source=text,
         demo_form="app",
