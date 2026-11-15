@@ -1,0 +1,91 @@
+Evaluation of Various Numerical Methods in LS-DYNA for 3D Crack Propagation
+Ala Tabiei and Wenlong Zhang
+Department of Mechanical Engineering, University of Cincinnati
+14th International LS-DYNA Users Conference, June 12-14, 2016. Session: Constitutive Modeling.
+
+Abstract
+Four numerical methods implemented in LS-DYNA are evaluated for fracture problems, especially 3-D crack propagation: Finite Element Method (FEM), Discrete Element Method (DEM), Element Free Galerkin (EFG) method and Extended Finite Element Method (XFEM). Their methodologies are briefly described and several numerical simulations are carried out and compared with experiment results. In some examples, fracture parameters are evaluated and mesh sensitivity is studied. Their potentials and limitations are discussed.
+
+Keywords: Crack propagation; Discrete element method; Finite element method; Element free Galerkin method; Extended finite element method; LS-DYNA
+
+Introduction
+FEM has long been used to model crack initiation, propagation and fracture parameters, but standard FEM struggles with complicated fracture problems. Four methods in LS-DYNA are evaluated: (a) FEM, (b) DEM, (c) EFG, (d) XFEM. Their methodologies are briefly explained and several simulations are carried out and compared to experiment results.
+
+Finite Element Method
+Three basic approaches simulate crack growth in FEM: smeared crack approach, nodal release approach and delete-and-fill remeshing approach. In this study fracture models were implemented in DYNA3D for 3-D crack growth, simulating automatic crack propagation in solid elements without user intervention. Fracture parameters are evaluated and various crack growth criteria are implemented.
+
+Evaluation of Fracture Parameters
+In DYNA3D, a 3-D crack is modeled with edges and surfaces of solid elements by a series of "subcracks" at the crack front. Each subcrack is defined by three nodes (1, 2, 3). For a through-thickness crack, fracture parameters are the average over all its subcracks. Evaluated parameters: stress intensity factors (KI, KII, KIII), energy release rates (GI, GII, GIII), and crack tip opening angle (CTOA).
+
+Stress intensity factors of the three fracture modes are extracted from the elastic solution: (a) Mode I (opening), (b) Mode II (shearing), (c) Mode III (tearing). SIFs are computed from nodal displacements at the crack tip, Young's modulus E, Poisson's ratio nu, distance r from the crack tip, and the Kolosov constant kappa (3 - 4*nu for plane strain, (3 - nu)/(1 + nu) for plane stress).
+
+Total energy release rate G = -dPi/da = -d(U - W)/da = GI + GII + GIII, where Pi is total potential energy per unit thickness, U strain energy, W work of external tractions, a crack length. Gi = Ki^2 / E', with E' = E for plane stress and E' = E/(1 - nu^2) for plane strain.
+
+Crack tip opening angle is evaluated based on subcrack angles. In uniform crack growth, the actual 3-D crack angle is the average of all subcrack angles.
+
+Implementation of the 3-D Crack Growth Criteria
+Crack growth criteria implemented in DYNA3D: maximum principal stress based criterion, CTOA based criterion, SIFs based criterion, and energy release rate based criterion. Crack growth direction is predicted from the effective stress intensity factor Keff and KII (maximum circumferential stress direction).
+
+Discrete Element Method
+DEM was proposed by Cundall (1979) to describe assemblies of discs, each element represented by a node at its center. Interactions such as spring, damper and friction are built between discrete elements, giving emergent macro properties like elastic modulus and material toughness.
+
+Unlike FEM, DEM treats fracture as a discrete process: successive breaking of bonds between particles, allowing natural, realistic crack propagation. A simple criterion is maximum normal or shear force: when bond force reaches the rupture threshold it drops to zero and the bond fails. Fracture toughness KIC and critical energy release rate GIC based criteria were also developed. The strain energy density (SED) criterion of Sih (1974) is used in LS-DYNA: fracture happens when strain energy density S reaches a critical value Sc (the gross area of the stress-strain curve from a uniaxial tensile test). S = Sv + Sd (volumetric + distortional parts, from principal stresses, shear stresses, E and nu).
+
+Minimum time step for DEM: DEM is explicit, so a minimum time step is required to avoid particle penetration. In LS-DYNA it is calculated by the Cundall approach: dt = 0.2 * pi * sqrt(rho * (4/3) * pi * r_sphere^2 / (E * NormK * 3 * (1 + 2*nu))), where NormK is a stiffness penalty parameter in *CONTROL_DISCRETE_ELEMENT, rho density, r_sphere particle radius, E Young's modulus, nu Poisson's ratio.
+
+Element Free Galerkin Method
+EFG was developed by T. Belytschko using the moving least square (MLS) interpolant and weight function to construct the discrete system in variational form. No element is needed: only a mesh of nodes and boundary conditions develops the Galerkin form. Advantage for crack propagation: no remeshing is needed because crack growth is modeled by extending free surfaces.
+
+In 1995 Belytschko developed a coupled FE / meshfree Galerkin method with consistency and continuity at the interface, so EFG can be applied only to the fracture region while FEM is used elsewhere (EFG costs more than FEM). In LS-DYNA, EFG is used with a cohesive zone model: MAT_185 (Tvergaard and Hutchinson model) with a trapezoidal traction-separation law (see *MAT_185 in the LS-DYNA material manual).
+
+Extended Finite Element Method
+XFEM handles the discontinuity, singularity and high gradient fields that trouble standard FEM. The idea: add enrichment functions to FEM's polynomial space using the partition of unity (PU), so minimum remeshing is needed. The level set method finds open or closed interfaces. Standard XFEM approximation: u^h(x) = standard shape functions times nodal unknowns, plus enriched nodes' shape functions times (enrichment(x) - enrichment(x_i)) times additional nodal unknowns a_i, where psi(x) is the enrichment function. The approximation has the Kronecker-delta property, so at nodes it equals the FE formulation. A common enrichment is the generalized Heaviside function. XFEM in LS-DYNA is also used with a cohesive zone model.
+
+Numerical Simulations
+
+Steel specimen under tension
+A steel specimen (ASTM E8: W = 12.5 mm, T = 2.64 mm, R = 12.5 mm, L = 200 mm, A = 60 mm, B = 50 mm, C = 20 mm) is simulated with FEM, DEM, EFG and XFEM. Displacement controlled, constant velocity 5 mm/ms at the right end, left end fixed. AISI 4340 steel: E = 201 GPa, yield stress 710 MPa. Material model *MAT_PLASTIC_KINEMATIC.
+
+DEM is run with three groups: regular arrangement with 3800 elements, regular with 30000 elements, random with 30000 elements. Crack appears at the same location for regular and random spacing. With regular arrangement, element exploding occurs when fracture happens. Mesh sensitivity is observed in DEM although not obvious. All four methods give a similar global stress-strain response; differences appear in the crack path rather than the global curve.
+
+Crack growth of Aluminum 2024-T3 plate under uniaxial tension
+Gullerud et al. (1999) load-crack extension data from five 2024-T3 M(T) aluminum specimens at NASA-Langley. Tensile load applied incrementally by displacement control; opposite constant velocities on both ends; loading rate V/L0 = 0.25 s^-1. All four methods verify the crack propagation vs. remote stress curve.
+
+Material: E = 71400 MPa, yield stress 345 MPa. CTOA criterion predicts crack growth in FEM; critical CTOA = 5.25 degrees. In DEM only regular arrangement is used to measure crack length (crack tip location is hard to determine in random arrangement). For EFG and XFEM, critical energy release rate GIC = 9.47 MPa-mm is used for the cohesive model. Load-crack extension curves are compared with experiment.
+
+Mixed-mode fracture of a central horizontal crack in a square plate
+A square plate with a central horizontal crack under mixed-mode loading: normal stress sigma_y (mode I) and shear stress tau_xy (mode II). Eight cases with different stress ratios. Linear elastic: E = 210000 MPa, nu = 0.28. CTOA criterion in FEM, critical value 0.19. An XFEM model is created for comparison.
+
+For an infinite plate with central crack: KI = sigma_y * sqrt(pi*a) = s * sigma * sqrt(pi*a), KII = -tau_xy * sqrt(pi*a) = -t * sigma * sqrt(pi*a). Substituting into the crack growth angle equation gives theoretical angle theta_0 for each stress ratio s/t.
+
+Table 3. Crack growth angle, theoretical vs FEM vs XFEM (degrees):
+Case 1, s/t = 0.1: theoretical 11.203, FEM 11.375, XFEM 11.041.
+Case 2, s/t = 0.2: theoretical 21.089, FEM 21.401, XFEM 19.983.
+Case 3, s/t = 0.3: theoretical 29.103, FEM 29.623, XFEM 29.106.
+Case 4, s/t = 0.4: theoretical 35.357, FEM 35.898, XFEM 34.493.
+Case 5, s/t = 0.5: theoretical 40.208, FEM 40.607, XFEM 39.555.
+Case 6, s/t = 0.6: theoretical 44.004, FEM 44.243, XFEM 43.958.
+Case 7, s/t = 0.7: theoretical 47.022, FEM 47.918, XFEM 47.822.
+Case 8, s/t = 0.8: theoretical 49.460, FEM 49.068, XFEM 48.821.
+The fracture model predicted the mixed-mode crack growth direction very well.
+
+Mode-I stress intensity factor evaluation
+To obtain "static" KI, traction is applied as a ramp load, then kept constant after 1.0 ms, for 2.0 ms total. Rectangular steel plate with central crack: 8 mm x 16 mm x 1 mm, crack length 4 mm, traction 200 MPa on both ends. Theoretical KI = sigma * sqrt(pi*a) * F(a/b). For a/b = 0.5, F = 1.1864. KI = 200 * sqrt(2*pi) * 1.1864 = 593 MPa*sqrt(mm).
+
+Table 4. SIF by method (theoretical KI = 593 MPa*sqrt(mm)):
+FEM: 576.77, relative error 2.70 percent.
+DEM: 601.05, relative error 1.40 percent.
+EFG: 523.85, relative error 11.63 percent.
+XFEM: 576.00, relative error 2.72 percent.
+EFG gives a smaller SIF than theoretical (11.63 percent difference). All other methods give good results.
+
+Crack propagation in vitreous biopolymer material
+A biopolymer plate under tensile load, simulated with DEM and XFEM; elements arranged regularly and randomly. Hole center at (a, b): Case A (3.34, 3.30) mm; Case B (1.83, 2.78) mm; Case C (0.60, 3.05) mm. Displacement controlled at 40 micrometers/s. Material: E = 0.312 GPa, nu = 0.3, density 1.209 g/mm3, mode-I fracture toughness KIc = 0.49 MPa*sqrt(m). Crack paths are compared with experiment and a theoretical crack deflection function.
+
+For case B, both DEM and XFEM show a crack path passing the hole, unlike the experiment and theory. For cases A and C, both methods show a similar path to the experiment and show crack branching. But with regularly arranged elements, DEM cannot capture crack direction and branching.
+
+Crack propagation analysis of rock-like Brazilian disc
+A rock disc with a precrack (length 2b = 10 mm) compressed by a line load; precrack angle phi from the y axis: 0, 30, 60 and 90 degrees. Disc radius 42 mm, thickness 25 mm. Experiment by Hadi; specimens loaded till failure. Material: E = 15 GPa, nu = 0.21, tensile strength 3.81 MPa, fracture toughness KIC = 2 MPa*sqrt(m). Simulated with EFG. Maximum load 16 kN, agreeing well with experiment. Crack shape looks similar to experiment, but the element deletion method makes visualization hard as more elements are deleted.
+
+Conclusion
+Four numerical methods are discussed and their capability in LS-DYNA is evaluated. These implementations work well for 3-D crack propagation when a proper criterion or algorithm is chosen. DEM, EFG and XFEM show their ability to predict fracture parameters and crack path. However, these three relatively new methods still have limitations for ease of use and generality in fragmentation simulations. For DEM, a regularly spaced element arrangement cannot predict crack direction correctly and cannot capture crack branching. For EFG, mixed-mode crack propagation still needs to be incorporated and its accuracy in predicting stress intensity factors still needs to be checked. For XFEM, only 2D analysis is available in LS-DYNA (as of 2016).
