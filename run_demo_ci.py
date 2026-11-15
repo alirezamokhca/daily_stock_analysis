@@ -16,7 +16,11 @@ import os
 import sys
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
-TEXT_FILE = os.path.join(REPO_DIR, "papers", "tabiei-zhang-2016.txt")
+# Condensed paper text: the full 18,427-char extraction timed out the first
+# Gemini call three times (600 s read timeout in Phase 1). The short version
+# keeps the title, abstract, all four methods, key formulas and all result
+# numbers, at ~12k chars, so the research call finishes in time.
+TEXT_FILE = os.path.join(REPO_DIR, "papers", "tabiei-zhang-2016-short.txt")
 
 
 def main() -> int:
@@ -38,6 +42,20 @@ def main() -> int:
         return _orig_configure(*args, **kwargs)
 
     genai.configure = _configure_with_rest
+
+    # The first Gemini call timed out three times at the SDK's default
+    # 600 s read timeout. Give slow generations up to 1200 s instead.
+    # PaperDemoAgent calls model.generate_content internally, so wrap it
+    # to inject the longer timeout when the caller did not set one.
+    _orig_generate = genai.GenerativeModel.generate_content
+
+    def _generate_with_timeout(self, *args, **kwargs):
+        opts = dict(kwargs.get("request_options") or {})
+        opts.setdefault("timeout", 1200)
+        kwargs["request_options"] = opts
+        return _orig_generate(self, *args, **kwargs)
+
+    genai.GenerativeModel.generate_content = _generate_with_timeout
 
     from paper_demo_agent import PaperDemoAgent
 
